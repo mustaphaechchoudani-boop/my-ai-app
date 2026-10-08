@@ -5,9 +5,9 @@ from groq import Groq
 st.set_page_config(page_title="My AI", page_icon="🤖", layout="centered")
 
 # عنوان التطبيق
-st.title("🤖 الذكاء الاصطناعي الخاص بي")
+st.title("🤖 MC AI ")
 
-# الساروت ديال Groq (حط الساروت ديالك هنا فبلاصة gsk_xxx)
+# الساروت ديال Groq (gsk_AbCdEfGhIjKlMnOpQrStUvWxYz123456)
 GROQ_API_KEY = "gsk_AbCdEfGhIjKlMnOpQrStUvWxYz123456"
 
 if "messages" not in st.session_state:
