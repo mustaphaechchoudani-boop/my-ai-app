@@ -30,7 +30,7 @@ if prompt := st.chat_input("كتب الميساج ديالك هنا..."):
         
         client = Groq(api_key=GROQ_API_KEY)
         completion = client.chat.completions.create(
-            model="qwen-2.5-coder-32b",
+            model="openai/gpt-oss-120b",
             messages=[{"role": m["role"], "content": m["content"]} for m in st.session_state.messages],
             stream=True,
         )
