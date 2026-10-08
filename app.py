@@ -5,7 +5,7 @@ from groq import Groq
 st.set_page_config(page_title="My AI", page_icon="🤖", layout="centered")
 
 # عنوان التطبيق
-st.title("🤖 MC AI ")
+st.title("🤖 Choudani AI ")
 
 # الساروت ديال Groq (حط الساروت ديالك هنا فبلاصة gsk_xxx)
 GROQ_API_KEY = "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"
