@@ -4,7 +4,7 @@ import streamlit as st
 from groq import Groq
 
 # ===== إعدادات الصفحة =====
-st.set_page_config(page_title="MyAI Pro", page_icon="🤖",
+st.set_page_config(page_title="Choudani AI Pro", page_icon="🤖",
                    layout="centered", initial_sidebar_state="collapsed")
 
 # ===== التصميم الاحترافي =====
