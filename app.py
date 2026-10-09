@@ -1,173 +1,201 @@
 import base64
+import io
 import streamlit as st
 from groq import Groq
 
-# إعدادات الصفحة
+# ==========================================
+# 1. إعدادات الصفحة بتصميم Claude AI
+# ==========================================
 st.set_page_config(
-    page_title="My AI",
-    page_icon="🤖",
-    layout="centered",
-    initial_sidebar_state="collapsed",
+    page_title="Claude AI", page_icon="🟠", layout="centered"
 )
 
-# تصميم CSS لواجهة أنيقة كتخدم مزيان فالهاتف
+# تصميم Claude المظلم والأنيق
 st.markdown(
     """
-    <style>
+<style>
+    /* خلفية Claude */
     .stApp {
-        background-color: #0f0f0f;
-        color: #ffffff;
+        background-color: #181816 !important;
+        color: #e6e4df !important;
     }
-    header {visibility: hidden;}
-    footer {visibility: hidden;}
-    .stChatMessage {
-        border-radius: 14px;
-        padding: 8px 12px;
-        margin-bottom: 8px;
+    header, footer, #MainMenu { visibility: hidden; }
+    
+    /* الهيدر والعنوان */
+    .claude-header {
+        text-align: center;
+        padding: 20px 0 10px 0;
     }
-    [data-testid="stChatInput"] {
-        border-radius: 16px;
+    .claude-logo {
+        font-size: 2.2rem;
+        font-weight: 700;
+        color: #d97757;
+        letter-spacing: -1px;
     }
-    </style>
-    """,
+    .claude-sub {
+        color: #8e8c85;
+        font-size: 0.9rem;
+    }
+
+    /* أسلوب الرسائل */
+    [data-testid="stChatMessage"] {
+        background-color: transparent !important;
+        border: none !important;
+        padding: 1rem 0 !important;
+    }
+    
+    /* مربع الكتابة */
+    [data-testid="stChatInput"] textarea {
+        background-color: #22221f !important;
+        color: #e6e4df !important;
+        border: 1px solid #3b3a34 !important;
+        border-radius: 14px !important;
+    }
+    [data-testid="stChatInput"] textarea:focus {
+        border-color: #d97757 !important;
+    }
+
+    /* زر رفع الملفات */
+    .stFileUploader {
+        background-color: #22221f;
+        border-radius: 12px;
+        padding: 10px;
+        border: 1px dashed #3b3a34;
+    }
+</style>
+""",
     unsafe_allow_html=True,
 )
 
-st.title("🤖 الذكاء الاصطناعي الخاص بي")
+# عنوان الواجهة
+st.markdown(
+    """
+    <div class="claude-header">
+        <div class="claude-logo">🟠 Claude 3.5</div>
+        <div class="claude-sub">مساعدك الذكي بقوة Groq & Vision</div>
+    </div>
+""",
+    unsafe_allow_html=True,
+)
 
-# الشريط الجانبي للإعدادات
-with st.sidebar:
-    st.header("⚙️ الإعدادات")
-    
-    groq_api_key = st.text_input(
-        "Groq API Key",
-        type="password",
-        placeholder="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",
-        help="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"
-    )
-    
-    model_option = st.selectbox(
-        "اختر الموديل:",
-        [
-            "llama-4-scout-17b-16e-instruct",
-            "llama-4-maverick-17b-128e-instruct",
-            "qwen/qwen2.5-vl-32b-instruct",
-            "deepseek-r1-distill-llama-70b",
-            "llama-3.3-70b-versatile",
-            "qwen-2.5-coder-32b",
-        ],
-        index=0,
-    )
-    
-    st.info("💡 الموديلات لي فيها VL أو Scout كيشوفو التصاور")
-    
-    if st.button("🗑️ مسح المحادثة"):
-        st.session_state.messages = []
-        st.rerun()
+# ==========================================
+# 2. الساروت والموديلات الرسمية
+# ==========================================
+GROQ_API_KEY = "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"  # ⚠️ حط الساروت ديالك هنا (لي كيبدا بـ gsk_)
 
-# التحقق من API Key
-if not groq_api_key:
-    st.warning("⚠️ المرجو إدخال Groq API Key من القائمة الجانبية")
-    st.stop()
+client = Groq(api_key=GROQ_API_KEY)
 
-# إنشاء العميل
-client = Groq(api_key=groq_api_key)
+TEXT_MODEL = "llama-3.3-70b-versatile"  # أذكى موديل كتابة
+VISION_MODEL = "llama-3.2-11b-vision-preview"  # الموديل الرسمي للصور
 
-# تهيئة المحادثة
+# ==========================================
+# 3. إدارة الجلسة والمحادثة
+# ==========================================
 if "messages" not in st.session_state:
     st.session_state.messages = []
 
-# عرض الرسائل السابقة
-for message in st.session_state.messages:
-    with st.chat_message(message["role"]):
-        # عرض النص
-        if isinstance(message["content"], str):
-            st.markdown(message["content"])
-        # عرض النص + الصورة (للرسائل لي فيها صورة)
-        elif isinstance(message["content"], list):
-            for part in message["content"]:
-                if part["type"] == "text":
-                    st.markdown(part["text"])
-                elif part["type"] == "image_url":
-                    st.image(part["image_url"]["url"])
+# زر مسح الشات فالجنب
+with st.sidebar:
+    st.markdown("### ⚙️ الخيارات")
+    if st.button("🗑️ محادثة جديدة"):
+        st.session_state.messages = []
+        st.rerun()
 
-# رفع الصورة
-uploaded_file = st.file_uploader(
-    "📷 صيفط صورة (اختياري)",
-    type=["jpg", "jpeg", "png", "webp", "gif"],
-    accept_multiple_files=False,
+# مكان رفع الصورة (تصميم خفيف)
+uploaded_image = st.file_uploader(
+    "📎 إرفاق صورة (تمرين، درس، مستند...)", type=["jpg", "jpeg", "png"]
 )
 
-# إدخال المستخدم
-if prompt := st.chat_input("كتب الميساج ديالك هنا..."):
-    user_content = []
+# عرض الأرشيف
+for msg in st.session_state.messages:
+    avatar = "👤" if msg["role"] == "user" else "🟠"
+    with st.chat_message(msg["role"], avatar=avatar):
+        if msg.get("image"):
+            st.image(io.BytesIO(msg["image"]), width=280)
+        st.markdown(msg["content"])
 
-    # إضافة الصورة إذا تم رفعها
-    if uploaded_file is not None:
-        try:
-            image_bytes = uploaded_file.getvalue()
-            base64_image = base64.b64encode(image_bytes).decode("utf-8")
-            mime_type = uploaded_file.type or "image/jpeg"
-            image_url_data = f"data:{mime_type};base64,{base64_image}"
+# ==========================================
+# 4. التفاعل مع المستخدم
+# ==========================================
+if prompt := st.chat_input("بماذا يمكنني مساعدتك اليوم؟"):
 
-            user_content.append(
-                {
-                    "type": "image_url",
-                    "image_url": {"url": image_url_data},
-                }
-            )
-        except Exception as e:
-            st.error(f"خطأ فقراءة الصورة: {e}")
+    has_image = uploaded_image is not None
 
-    # إضافة النص
-    user_content.append({"type": "text", "text": prompt})
+    # إضافة ميساج المستخدم للذاكرة
+    if has_image:
+        img_bytes = uploaded_image.getvalue()
+        st.session_state.messages.append(
+            {"role": "user", "content": prompt, "image": img_bytes}
+        )
+    else:
+        st.session_state.messages.append(
+            {"role": "user", "content": prompt, "image": None}
+        )
 
-    # حفظ رسالة المستخدم
-    st.session_state.messages.append({"role": "user", "content": user_content})
+    # عرض ميساج المستخدم فالبلاصة
+    with st.chat_message("user", avatar="👤"):
+        if has_image:
+            st.image(uploaded_image, width=280)
+        st.markdown(prompt)
 
-    # عرض رسالة المستخدم
-    with st.chat_message("user"):
-        for part in user_content:
-            if part["type"] == "text":
-                st.markdown(part["text"])
-            elif part["type"] == "image_url":
-                st.image(part["image_url"]["url"])
+    # بناء الطلب لـ Groq
+    api_messages = [
+        {
+            "role": "system",
+            "content": "أنت Claude، مساعد ذكي جداً وعالي الدقة. أجب بأسلوب راقٍ ومباشر بنفس لغة المستخدم (الدارجة المغربية، العربية، أو الفرنسية). إذا أُرفقت صورة، قم بتحليلها بدقة وحل التمارين الموجودة فيها خطوة بخطوة.",
+        }
+    ]
 
-    # توليد الرد
-    with st.chat_message("assistant"):
-        message_placeholder = st.empty()
+    # تجهيز محتوى الرسالة الحالية
+    if has_image:
+        b64_img = base64.b64encode(uploaded_image.getvalue()).decode("utf-8")
+        current_content = [
+            {
+                "type": "text",
+                "text": prompt
+                if prompt
+                else "حل واشرح المحتوى الموجود في هذه الصورة بالتفصيل.",
+            },
+            {
+                "type": "image_url",
+                "image_url": {
+                    "url": f"data:{uploaded_image.type};base64,{b64_img}"
+                },
+            },
+        ]
+        selected_model = VISION_MODEL
+    else:
+        current_content = prompt
+        selected_model = TEXT_MODEL
+
+    # إضافة التاريخ
+    for m in st.session_state.messages[:-1]:
+        api_messages.append({"role": m["role"], "content": m["content"]})
+
+    api_messages.append({"role": "user", "content": current_content})
+
+    # إجابة الـ AI
+    with st.chat_message("assistant", avatar="🟠"):
+        placeholder = st.empty()
         full_response = ""
 
         try:
-            # تحويل الرسائل للتنسيق المناسب لـ Groq (Vision)
-            api_messages = []
-            for m in st.session_state.messages:
-                if isinstance(m["content"], str):
-                    api_messages.append({"role": m["role"], "content": m["content"]})
-                elif isinstance(m["content"], list):
-                    api_messages.append({"role": m["role"], "content": m["content"]})
-
-            completion = client.chat.completions.create(
-                model=model_option,
+            stream = client.chat.completions.create(
+                model=selected_model,
                 messages=api_messages,
                 stream=True,
-                temperature=0.7,
-                max_tokens=4096,
+                temperature=0.2,
             )
-
-            for chunk in completion:
-                if chunk.choices[0].delta.content:
-                    full_response += chunk.choices[0].delta.content
-                    message_placeholder.markdown(full_response + "▌")
-
-            message_placeholder.markdown(full_response)
-
+            for chunk in stream:
+                delta = chunk.choices[0].delta.content
+                if delta:
+                    full_response += delta
+                    placeholder.markdown(full_response + "▌")
+            placeholder.markdown(full_response)
         except Exception as e:
-            error_msg = str(e)
-            st.error(f"خطأ: {error_msg}")
+            placeholder.markdown(f"⚠️ **خطأ:** `{e}`")
             full_response = ""
 
-    # حفظ رد المساعد
     if full_response:
         st.session_state.messages.append(
             {"role": "assistant", "content": full_response}
