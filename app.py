@@ -10,13 +10,12 @@ st.set_page_config(
     page_title="Claude 3.5 Sonnet", page_icon="✴️", layout="centered"
 )
 
-# تصميم Claude المظلم والأنيق
+# تصميم Claude المظلم
 st.markdown(
     """
 <style>
     @import url('https://fonts.googleapis.com/css2?family=Sora:wght@400;600;700&display=swap');
 
-    /* خلفية Claude الأصلية */
     .stApp {
         background-color: #141413 !important;
         color: #ece9e1 !important;
@@ -24,7 +23,6 @@ st.markdown(
     }
     header, footer, #MainMenu { visibility: hidden; }
 
-    /* عنوان Claude */
     .claude-container {
         text-align: center;
         padding: 20px 0 15px 0;
@@ -46,14 +44,12 @@ st.markdown(
         margin-top: 6px;
     }
 
-    /* رسائل المحادثة */
     [data-testid="stChatMessage"] {
         background-color: transparent !important;
         border: none !important;
         padding: 1rem 0 !important;
     }
 
-    /* مربع الإدخال */
     [data-testid="stChatInput"] textarea {
         background-color: #1f1e1b !important;
         color: #ece9e1 !important;
@@ -65,7 +61,6 @@ st.markdown(
         box-shadow: 0 0 0 1px #da7756 !important;
     }
 
-    /* زر رفع الصور */
     .stFileUploader {
         background-color: #1f1e1b;
         border: 1px dashed #383630;
@@ -73,7 +68,6 @@ st.markdown(
         padding: 8px;
     }
 
-    /* Sidebar */
     [data-testid="stSidebar"] {
         background-color: #191816 !important;
         border-right: 1px solid #2b2823 !important;
@@ -95,55 +89,20 @@ st.markdown(
 )
 
 # =========================================================
-# 2. المفتاح والجلب الذكي للموديلات (يمنع أي خطأ 404)
+# 2. الساروت والموديلات الرسمية والمباشرة
 # =========================================================
 GROQ_API_KEY = "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"  # ⚠️ حط الساروت ديالك هنا (اللي كيبدا بـ gsk_)
 
 client = Groq(api_key=GROQ_API_KEY)
 
-
-@st.cache_data(ttl=3600)
-def detect_working_models(key):
-    try:
-        c = Groq(api_key=key)
-        models = [m.id for m in c.models.list().data]
-
-        # اختيار الموديل الممتاز للنص
-        text_list = [
-            "llama-3.3-70b-versatile",
-            "qwen-2.5-coder-32b",
-            "llama-3.1-8b-instant",
-        ]
-        best_text = next(
-            (m for m in text_list if m in models),
-            models[0] if models else "llama-3.3-70b-versatile",
-        )
-
-        # اختيار الموديل المعتمد للصور
-        vision_list = [
-            "llama-3.2-11b-vision-preview",
-            "llama-3.2-90b-vision-preview",
-            "llava-v1.5-7b-4096-preview",
-        ]
-        best_vision = next(
-            (m for m in vision_list if m in models),
-            next(
-                (m for m in models if "vision" in m),
-                "llama-3.2-11b-vision-preview",
-            ),
-        )
-
-        return best_text, best_vision
-    except:
-        return "llama-3.3-70b-versatile", "llama-3.2-11b-vision-preview"
-
-
-TEXT_MODEL, VISION_MODEL = detect_working_models(GROQ_API_KEY)
+# تحديد الموديلات الحقيقية المباشرة (بلا تخمين أوتوماتيكي كيختار Guard)
+TEXT_MODEL = "llama-3.3-70b-versatile"
+VISION_MODEL = "llama-3.2-11b-vision-preview"
 
 # القائمة الجانبية
 with st.sidebar:
     st.markdown("### ⚙️ Claude Settings")
-    st.caption(f"🧠 Text Engine: `{TEXT_MODEL}`")
+    st.caption(f"🧠 Engine: `{TEXT_MODEL}`")
     st.caption(f"👁️ Vision Engine: `{VISION_MODEL}`")
     st.markdown("---")
     if st.button("🗑️ محادثة جديدة", use_container_width=True):
@@ -191,7 +150,7 @@ if prompt := st.chat_input("بماذا يمكنني مساعدتك اليوم؟"
             st.image(uploaded_image, width=280)
         st.markdown(prompt)
 
-    # إعداد الطلب للـ API
+    # إعداد الرسائل للـ API
     system_prompt = (
         "أنت Claude، نموذج ذكاء اصطناعي فائق الذكاء، دقيق للغاية وسريع. "
         "تجيب بأسلوب راقٍ ومباشر باللغة التي يكلمك بها المستخدم (الدارجة المغربية، العربية، الفرنسية، أو الإنجليزية). "
@@ -200,7 +159,7 @@ if prompt := st.chat_input("بماذا يمكنني مساعدتك اليوم؟"
 
     api_messages = [{"role": "system", "content": system_prompt}]
 
-    # إضافة الأرشيف السابق كـ نص فقط لضمان السرعة وعدم حدوث خطأ
+    # إضافة الأرشيف السابق كـ نص لضمان الاستقرار
     for m in st.session_state.messages[:-1]:
         api_messages.append({"role": m["role"], "content": m["content"]})
 
@@ -228,7 +187,7 @@ if prompt := st.chat_input("بماذا يمكنني مساعدتك اليوم؟"
 
     api_messages.append({"role": "user", "content": current_payload})
 
-    # توليد استجابة الـ AI
+    # توليد الاستجابة
     with st.chat_message("assistant", avatar="✴️"):
         placeholder = st.empty()
         full_response = ""
@@ -247,7 +206,7 @@ if prompt := st.chat_input("بماذا يمكنني مساعدتك اليوم؟"
                     placeholder.markdown(full_response + "▌")
             placeholder.markdown(full_response)
         except Exception as e:
-            placeholder.markdown(f"⚠️ **تنبيه:** `{e}`")
+            placeholder.markdown(f"⚠️ **خطأ:** `{e}`")
             full_response = ""
 
     if full_response:
