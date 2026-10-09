@@ -123,7 +123,7 @@ with st.sidebar:
     api_key_input = st.text_input(
         "🔑 Groq API Key:",
         type="password",
-        value=os.getenv("GROQ_API_KEY", ""),
+        value=os.getenv("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"),
         help="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",
     )
 
