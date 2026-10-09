@@ -10,7 +10,7 @@ if "GROQ_API_KEY" in st.secrets:
     api_key = st.secrets["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"]
 else:
     # إلا ما درتيهش فـ secrets، كيعطيك خانة فـ الجنب تدخلو بيدك
-    api_key = st.sidebar.text_input("🔑 دخل Groq API Key:", type="password")
+    api_key = st.sidebar.text_input("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", type="password")
 
 if not api_key:
     st.warning("⚠️ المرجو إدخال API Key للبدء.")
