@@ -121,7 +121,7 @@ with st.sidebar:
 
     # إدخال المفتاح بشكل آمن
     api_key_input = st.text_input(
-        "🔑 Groq API Key:",
+        "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",
         type="password",
         value=os.getenv("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"),
         help="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",
