@@ -43,7 +43,7 @@ with st.sidebar:
         "Groq API Key",
         type="password",
         placeholder="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",
-        help="حط الساروت ديال Groq هنا"
+        help="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"
     )
     
     model_option = st.selectbox(
